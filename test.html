@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="utf-8">
+	<title>changepack.js test suite</title>
+	<style media="screen">
+		body{
+			background-color: black;
+			color: white;
+			font-size: 20px;
+		}
+		button{
+			padding: 10px;
+			font-size: 20px;
+		}
+	</style>
+</head>
+<body>
+
+<div id="running">
+	<button onclick="startTest()">Start</button>
+</div>
+
+<script src="changepack.js"></script>
+<script>
+
+// let fullDebug = true;
+let fullDebug = false;
+
+function log(text) {
+	if (fullDebug == true) {
+		console.log(text);
+	}
+}
+
+/*
+testing function
+
+o = original
+n = new
+n1 = make sure n looks like this
+checking = a text string to display in the console.log();
+*/
+function test(o,n,n1,checking) {
+	log("original");
+	log(o);
+	let changes = changepack.encode(o, n);
+	log("changes");
+	log(changes);
+	// console.log(changes);
+	let packedChanges = changepack.packChanges(changes);
+	log("packedChanges");
+	log(packedChanges);
+	let unpackedChanges = changepack.unpackChanges(packedChanges.packedChanges);
+	log("unpackedChanges");
+	log(unpackedChanges);
+	let evolved = changepack.decode(o, unpackedChanges);
+	log("evolved");
+	log(evolved);
+	
+	// console.log("evolved", evolved);
+	
+	if (changepack.quickCheck(evolved,n1) == false) {
+		console.log("checking " + checking + "...passed");
+	} else {
+		console.error("checking " + checking + "...FAILED");
+		console.error("n is:");
+		console.log(n);
+		console.error("n should be:");
+		console.log(n1);
+	}
+}
+
+
+
+function startTest() {
+	document.getElementById("running").innerHTML = "Running...";
+	setTimeout(doTest, 1);
+}
+
+function doTest() {	
+
+	let o = null;
+	let n = null;
+	let n1 = null;
+	
+	o = [];
+	n = ["a1"];
+	n1 = ["a1"];
+	test(o, n, n1, "array strings");
+	log("--------");
+	
+	o = [];
+	n = [0];
+	n1 = [0];
+	test(o, n, n1, "array numbers");
+	log("--------");
+	
+	o = [];
+	n = ["a1", "a2", 1];
+	n1 = ["a1", "a2", 1];
+	test(o, n, n1, "array types");
+	log("--------");
+	
+	o = {};
+	n = {a: "a"};
+	n1 = {a: "a"};
+	test(o, n, n1, "object strings");
+	log("--------");
+	
+	o = {};
+	n = {a: [0]};
+	n1 = {a: [0]};
+	test(o, n, n1, "object array numbers");
+	log("--------");
+	
+	o = {};
+	n = {a: [0,1]};
+	n1 = {a: [0,1]};
+	test(o, n, n1, "object array multiple numbers");
+	log("--------");
+	
+	o = {};
+	n = {a: ["a"]};
+	n1 = {a: ["a"]};
+	test(o, n, n1, "object array string");
+	log("--------");
+	
+	o = {};
+	n = {a: ["a","b"]};
+	n1 = {a: ["a","b"]};
+	test(o, n, n1, "object array multiple strings");
+	log("--------");
+	
+	o = {};
+	n = {a: ["a",0]};
+	n1 = {a: ["a",0]};
+	test(o, n, n1, "object array multiple types");
+	log("--------");
+	
+	o = {};
+	n = {a: ["a"], b: ["a"]};
+	n1 = {a: ["a"], b: ["a"]};
+	test(o, n, n1, "object multiple array strings");
+	log("--------");
+	
+	o = {};
+	n = {a: [ {a: "a"} ] };
+	n1 = {a: [ {a: "a"} ] };
+	test(o, n, n1, "object array objects");
+	log("--------");
+	
+	o = {};
+	n = {a: {b: "q"} };
+	n1 = {a: {b: "q"} };
+	test(o, n, n1, "object sub object strings");
+	log("--------");
+	
+	o = {};
+	n = {a: {b: "q", c: "r"} };
+	n1 = {a: {b: "q", c: "r"} };
+	test(o, n, n1, "object multiple sub object strings");
+	log("--------");
+	
+	o = {};
+	n = {a: {b: 0} };
+	n1 = {a: {b: 0} };
+	test(o, n, n1, "object sub object number");
+	log("--------");
+	
+	o = {};
+	n = {a: {b: 0, c: 1} };
+	n1 = {a: {b: 0, c: 1} };
+	test(o, n, n1, "object multiple sub object numbers");
+	log("--------");
+	
+	o = {};
+	n = {a: {b: 0, c: "1"} };
+	n1 = {a: {b: 0, c: "1"} };
+	test(o, n, n1, "object multiple sub object strings and numbers");
+	log("--------");
+	
+	o = {};
+	n = {a: false, b: true};
+	n1 = {a: false, b: true};
+	test(o, n, n1, "object test boolean");
+	log("--------");
+	
+	
+	// various int numbers
+	let lenFailed = [];
+	o = {};
+	for (var number = -2147483649; number < 4294967295; number += 1000) {
+		n = {a: number, };
+		n1 = {a: number, };
+		log("original");
+		log(o);
+		let changes = changepack.encode(o, n);
+		log("changes");
+		log(changes);
+		let packedChanges = changepack.packChanges(changes);
+		log("packedChanges");
+		log(packedChanges);
+		let unpackedChanges = changepack.unpackChanges(packedChanges.packedChanges);
+		log("unpackedChanges");
+		log(unpackedChanges);
+		let evolved = changepack.decode(o, unpackedChanges);
+		log("evolved");
+		log(evolved);
+	
+		if (evolved.a != n1.a) {
+			lenFailed.push(len);
+		}
+	}
+	
+	if (lenFailed.length == 0) {
+		console.log("checking various int numbers...passed");
+	} else {
+		console.error("checking various int numbers: " + lenFailed.join(",") + "...FAILED");
+	}
+	
+	log("--------");
+	
+	
+	// various float numbers
+	lenFailed = [];
+	o = {};
+	for (var number = -650000.5; number < 650000.5; number += 5) {
+		n = {a: number, };
+		n1 = {a: number, };
+		log("original");
+		log(o);
+		let changes = changepack.encode(o, n);
+		log("changes");
+		log(changes);
+		let packedChanges = changepack.packChanges(changes);
+		log("packedChanges");
+		log(packedChanges);
+		let unpackedChanges = changepack.unpackChanges(packedChanges.packedChanges);
+		log("unpackedChanges");
+		log(unpackedChanges);
+		let evolved = changepack.decode(o, unpackedChanges);
+		log("evolved");
+		log(evolved);
+		
+		if (evolved.a != n1.a) {
+			lenFailed.push(len);
+		}
+	}
+	
+	if (lenFailed.length == 0) {
+		console.log("checking various float numbers...passed");
+	} else {
+		console.error("checking various float numbers: " + lenFailed.join(",") + "...FAILED");
+	}
+	
+	log("--------");
+	
+	
+	// various length strings
+	lenFailed = [];
+	o = {};
+	for (var len = 0; len < 100000; len++) {
+		n = {a: "".padStart(len, "0"), };
+		n1 = {a: "".padStart(len, "0"), };
+		log("original");
+		log(o);
+		let changes = changepack.encode(o, n);
+		log("changes");
+		log(changes);
+		let packedChanges = changepack.packChanges(changes);
+		log("packedChanges");
+		log(packedChanges);
+		let unpackedChanges = changepack.unpackChanges(packedChanges.packedChanges);
+		log("unpackedChanges");
+		log(unpackedChanges);
+		let evolved = changepack.decode(o, unpackedChanges);
+		log("evolved");
+		log(evolved);
+		
+		if (evolved.a != n1.a) {
+			lenFailed.push(len);
+		}
+	}
+
+	if (lenFailed.length == 0) {
+		console.log("checking various length strings length...passed");
+	} else {
+		console.error("checking various length strings length: " + lenFailed.join(",") + "...FAILED");
+	}
+	
+	log("--------");
+	
+	console.log("done");
+	
+	document.getElementById("running").innerHTML = "Done...please view the console.log() for test results";
+	
+}
+
+
+/* 
+tests that need to be added:
+
+* testing path length
+* testing the actual generated pack structure to validate correctness to the specification
+
+*/
+
+
+
+
+// polyfill for IE11
+// this slightly deviates from original padStart.  we only calculate for one char
+// this just needs to be quick and dirty - definitely not production code.
+if (!String.prototype.padStart) {
+	String.prototype.padStart = function padStart(len, char) {
+		var out = "";
+		for (var i = 0; i < len; i++) {
+			out += char;
+		}
+		return out;
+	}
+}
+
+</script>
+</body>
+</html>
