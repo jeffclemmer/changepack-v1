@@ -3,7 +3,7 @@ Quick Warning
 
 This software is *BETA* software.  It still needs more tests written, performance tuning, and some security testing.
 
-What Does The Library Do?
+What Does The Changepack.js Do?
 -------------------------
 
 In a nutshell, it basically gives you a diff of two JSON objects and then packs that diff into a packed binary format. It allows you to track changes over time to an object or calculate differences between two objects.
@@ -69,12 +69,12 @@ The API includes the following methods:
 
 There are also a few "private" methods which support the public method API and are prefixed with underscores. These methods should not be used directly. These private methods are:
 
-    \_decodePathAndRemove(object, path)
-    \_decodePathAndAssign(obj, path, value)
-    \_encodeValue(actionType, value)
-    \_packString(value)
-    \_getActionType(value)
-    \_paths(obj)
+    _decodePathAndRemove(object, path)
+    _decodePathAndAssign(obj, path, value)
+    _encodeValue(actionType, value)
+    _packString(value)
+    _getActionType(value)
+    _paths(obj)
 
 * * *
 
