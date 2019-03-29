@@ -1,3 +1,5 @@
+// Written by and Copyright 2019 by Jeff Clemmer
+
 /* 
 right now, this code *does not* work in node.  node handles strings differently and strings can't be packed correctly.
 
@@ -23,7 +25,6 @@ var unpackedChanges = changepack.unpackChanges(packedChanges);
 var evolved = changepack.decode(previous, unpackedChanges);
 
 // evolved should equal the same as latest
-
 */
 
 var changepack = {};
