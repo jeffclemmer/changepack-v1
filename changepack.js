@@ -510,23 +510,6 @@ changepack._decodePathAndAssign = function(obj, path, value) {
 		
 	}
 	
-	
-	// the key already exists, so 
-	// if (created == false) {
-	// 	for (var t = 0; t < tpath.length-1; t++) {
-	// 		if ( (tpath[t] in cur) == true) {
-	// 			// go to next key
-	// 			lastCur = cur;
-	// 			cur = cur[ tpath[t] ];
-	// 		}
-	// 	}
-	// 
-	// 	// delete the key
-	// 	if (cur != undefined) {
-	// 	}
-	// }
-	// cur = value;
-	
 	return object;
 }
 
