@@ -1,17 +1,10 @@
 /* 
-right now, this code *does not* work in node.  for some reason, node handles strings differently and strings can't be packed correctly.
+right now, this code *does not* work in node.  node handles strings differently and strings can't be packed correctly.
 
 so, to make it work, we need to detect if running in node or a browser
 https://stackoverflow.com/questions/34550890/how-to-detect-if-script-is-running-in-browser-or-in-node-js
 there are implications to the byte packer code in the way that node handles chars compared to a browser.
 for some reason, node handles it differently, so we need to be able to detect and change behavior eventually...
-
-changepack.js does not *yet* work with arrays like:
-var a = ["asdf", "fdsa"];
-
-it will, however, work with objects in those arrays:
-var a = [	{asdf: 5}, {fdsa: 6} ];
-
 
 // use in the following manner
 var previous = {...}; // the original object
@@ -30,6 +23,7 @@ var unpackedChanges = changepack.unpackChanges(packedChanges);
 var evolved = changepack.decode(previous, unpackedChanges);
 
 // evolved should equal the same as latest
+
 */
 
 var changepack = {};
@@ -86,12 +80,6 @@ changepack.encode = function(oldObj, newObj) {
 	var oldPaths = changepack._paths(oldObj);
 	var newPaths = changepack._paths(newObj);
 	
-	// console.log("oldPaths:");
-	// console.log(oldPaths);
-	
-	// console.log("newPaths:");
-	// console.log(newPaths);
-	
 	// check for added paths and changed values
 	var add = [];
 	var text = "";
@@ -113,8 +101,7 @@ changepack.encode = function(oldObj, newObj) {
 		
 		if (changed == true) {
 			var actionType = changepack._getActionType(newPaths[path]);
-			// console.log(text + path + " = " + actionType + " = 0x" + actionType.toString(16) + " = " + changepack.types[actionType]);
-			
+
 			change += String.fromCharCode(actionType);
 			change += changepack._packString(path);
 			change += changepack._encodeValue(actionType, newPaths[path]);
@@ -129,8 +116,6 @@ changepack.encode = function(oldObj, newObj) {
 	for (var path in oldPaths) {
 		var change = "";
 		if ( (path in newPaths) == false) {
-			// console.log("removing " + path);
-			
 			change += String.fromCharCode(0xF0);
 			change += changepack._packString(path);
 			
@@ -231,9 +216,6 @@ changepack.unpackChanges = function(packedChanges) {
 	var view = new DataView(buffer);
 	var version = view.getUint16(0);
 	
-	// console.log("changepack version");
-	// console.log(version);
-	
 	if (version == 1) {
 		while (curPos < packedChanges.length) {
 			
@@ -291,11 +273,9 @@ changepack.decode = function(oldObj, changes) {
 	for (var i in changes) {
 		
 		var curPos = 0;
-		// console.log("changes: ", changes[i]);
 		
 		// decode action
 		var actionType = changes[i].change.charCodeAt(curPos);
-		// console.log("actionType: 0x" + actionType.toString(16));
 		curPos += 1;
 		
 		// decode path
@@ -304,9 +284,6 @@ changepack.decode = function(oldObj, changes) {
 		
 		var path = changes[i].change.slice(curPos, curPos + pathLen);
 		curPos += pathLen;
-		// console.log("pathLen: " + pathLen + " - path: '" + path + "'");
-		
-		// console.log("curPos: " + curPos);
 		
 		// decode value, if necessary
 		var value;
@@ -345,15 +322,9 @@ changepack.decode = function(oldObj, changes) {
 				bufLen = 1 << (actionType - 0x0C);
 			}
 			
-			// console.log("bufLen");
-			// console.log(bufLen);
-			
 			for (var t = 0; t < bufLen; t++) {
 				copy[t] = changes[i].change.charCodeAt(curPos + t);
 			}
-			
-			// console.log("copy");
-			// console.log(copy);
 			
 			var view = new DataView(buffer);
 			
@@ -403,7 +374,6 @@ changepack.decode = function(oldObj, changes) {
 		
 		// replay changes on oldObj
 		if (actionType == 0xF0) {
-			// console.log("removing: "+path);
 			// do field removals
 			oldObj = changepack._decodePathAndRemove(oldObj, path);
 		} else {
@@ -429,23 +399,13 @@ changepack.quickCheck = function(oldObj, newObj) {
 	oldPaths = changepack._paths(oldObj);
 	newPaths = changepack._paths(newObj);
 	
-	// console.log("oldPaths:");
-	// console.log(oldPaths);
-	// 
-	// console.log("newPaths:");
-	// console.log(newPaths);
-	
 	// check for any additions or changes
 	for (var path in newPaths) {
-		// console.log("path: " + path + "=" + newPaths[path]);
 		if ( (path in oldPaths) == true) {
-			// check to see if value has changed
 			if (newPaths[path] != oldPaths[path]) {
-				// console.log("changepack encoding time: " + ( (new Date().getTime() - startTime) ) + " ms" );
 				return true;
 			}
 		} else {
-			// console.log("changepack encoding time: " + ( (new Date().getTime() - startTime) ) + " ms" );
 			return true;
 		}
 	}
@@ -469,7 +429,6 @@ changepack.quickCheck = function(oldObj, newObj) {
 // decode the chain of a flat path and remove that key
 changepack._decodePathAndRemove = function(obj, path) {
 	var tpath = path.split(".");
-	// console.log("tpath: " + tpath);
 	
 	// sanity
 	if (tpath.length == 0) return obj;
@@ -496,12 +455,6 @@ changepack._decodePathAndRemove = function(obj, path) {
 				lastCur.splice(tpath[ tpath.length-2 ], 1);
 			}
 		}
-		
-		// if array element, shift the element off the stack
-		// if (cur[ tpath[ tpath.length-1 ] ] instanceof Array) {
-		// 	console.log("Array");
-		// } else {
-		// }
 	}
 	
 	return object;
@@ -514,7 +467,6 @@ changepack._decodePathAndAssign = function(obj, path, value) {
 	if (obj == undefined) throw "object is not defined";
 	
 	var tpath = path.split(".");
-	// console.log("tpath: " + tpath);
 	
 	// sanity
 	if (tpath.length == 0) return obj;
@@ -597,7 +549,6 @@ changepack._encodeValue = function(actionType, value) {
 		var view = new DataView(buffer);
 		view.setInt8(0, value);
 		var out = new Uint8Array(buffer);
-		// console.log("int8: ", out);
 		return String.fromCharCode.apply(null, out);
 		
 	} else if (actionType == 0x03) {
@@ -607,18 +558,15 @@ changepack._encodeValue = function(actionType, value) {
 		var view = new DataView(buffer);
 		view.setInt16(0, value);
 		var out = new Uint8Array(buffer);
-		// console.log("int16: ", out);
 		return String.fromCharCode.apply(null, out);
 		
 	} else if (actionType == 0x04) {
 		
 		// is 32 bit int?
-		// console.log("value:", value);
 		var buffer = new ArrayBuffer(4);
 		var view = new DataView(buffer);
 		view.setInt32(0, value);
 		var out = new Uint8Array(buffer);
-		// console.log("int32: ", out);
 		return String.fromCharCode.apply(null, out);
 		
 	} else if (actionType == 0x05) {
@@ -631,7 +579,6 @@ changepack._encodeValue = function(actionType, value) {
 		var view = new DataView(buffer);
 		view.setUint8(0, value);
 		var out = new Uint8Array(buffer);
-		// console.log("uint8: ", out);
 		return String.fromCharCode.apply(null, out);
 		
 	} else if (actionType == 0x07) {
@@ -641,7 +588,6 @@ changepack._encodeValue = function(actionType, value) {
 		var view = new DataView(buffer);
 		view.setUint16(0, value);
 		var out = new Uint8Array(buffer);
-		// console.log("uint16: ", out);
 		return String.fromCharCode.apply(null, out);
 		
 	} else if (actionType == 0x08) {
@@ -651,7 +597,6 @@ changepack._encodeValue = function(actionType, value) {
 		var view = new DataView(buffer);
 		view.setUint32(0, value);
 		var out = new Uint8Array(buffer);
-		// console.log("uint32: ", out);
 		return String.fromCharCode.apply(null, out);
 		
 	} else if (actionType == 0x09) {
@@ -667,7 +612,6 @@ changepack._encodeValue = function(actionType, value) {
 		var view = new DataView(buffer);
 		view.setFloat64(0, value);
 		var out = new Uint8Array(buffer);
-		// console.log("float64: ", out);
 		return String.fromCharCode.apply(null, out);
 		
 	} else if (actionType == 0x0C) {
@@ -726,9 +670,6 @@ changepack._packString = function(value) {
 			view[t+1] = value.charCodeAt(t);
 		}
 		
-		// view.set(value, 1);
-		// console.log("view");
-		// console.log(view);
 		return String.fromCharCode.apply(null, view);
 	} else {
 		console.error("string to pack was too long.  must be less than 256 chars");
@@ -849,215 +790,3 @@ changepack._paths = function(obj) {
 	
 	return paths;
 }
-
-// var obj1 = {};
-// var obj2 = {
-// 	name: "",
-// 	address: "",
-// 	timeWorked: [],
-// }
-// var a = {
-// 	foo: "bar", 
-// 	asdf: [
-// 		"asdf", 
-// 	],
-// 	sdfgh: "rth"
-// };
-// var b = {
-// 	foo: "bar", 
-// 	asdf: [
-// 		"asdff", 
-// 		{fdsa: 0.5}
-// 	],
-// 	// string1: "".padStart(139, "0"),
-// };
-
-
-// var a = {};
-// var b = {
-// 	// foo1: "".padStart(100000, "0"),
-// 	// foo2: 100000000000.1111,
-// 	foo3: true,
-// 	foo4: {
-// 		foo5: {
-// 			foo6: {
-// 				foo7: true
-// 			}
-// 		}
-// 	},
-// 	foo9: null,
-// 	foo10: [
-// 		"asdf1", 
-// 		"asdf2", 
-// 		"asdf3", 
-// 		{foo20: false}
-// 	],
-// };
-// 
-// // test types
-// var b = {
-// 	// ints
-// 	int1: 0,
-// 	int2: 1,
-// 	int3: 0xFF,
-// 	int4: 0xFF1,
-// 	int5: 0xFFFF,
-// 	int6: 0xFFFF1,
-// 	int7: 0xFFFFFFFF, // for some reason triggers a float64
-// 	int8: 0xEFFFFFFF, // for some reason triggers a float64
-// 	int9: 0xFFFFFFFE, // for some reason triggers a float64
-// 	int10: 4294967295, // for some reason triggers a float64
-// 	int11: 4294967296, // for some reason triggers a float64
-// 
-// 	int12: -1,
-// 	int13: -128,
-// 	int14: -256,
-// 	int15: -32768,
-// 	int16: -65535,
-// 	int17: -2147483647,
-// 
-// 	float1: 0.0,
-// 	float2: 0.1,
-// 	float3: 255.5,
-// 	float4: 345654020.12,
-// 	float5: -345654020.12,
-// 	float6: -255.5,
-// 	float7: -0.1,
-// 
-// 	string1: "".padStart(55, "0"),
-// 	// string2: "".padStart(500, "0"),
-// 	// string4: "".padStart(65535, "0"),
-// 	// string4: "".padStart(65536, "0"),
-// 	// string5: "".padStart(100000, "0"),
-// 
-// 	bool1: false,
-// 	bool2: true,
-// 
-// 	null1: null,
-// }
-
-// var changes = changepack.encode(a,b, "jerkrichardsasdf");
-// 
-// console.log(changes);
-// 
-// var decoded = changepack.decode(a, changes);
-// 
-// console.log("decoded");
-// console.log(decoded);
-
-
-// var obj1 = {};
-// console.log('changepack._decodePathAndAssign(obj1, "foo1.foo2", 1)');
-// console.log(changepack._decodePathAndAssign(obj1, "foo1.foo2", 1));
-// 
-// var obj2 = {};
-// console.log('changepack._decodePathAndAssign(obj2, "foo1.foo2.0", 1)');
-// obj2 = changepack._decodePathAndAssign(obj2, "foo1.foo2.0", 10);
-// obj2 = changepack._decodePathAndAssign(obj2, "foo1.foo2.1", 20);
-// console.log(obj2);
-// 
-// var obj3 = {};
-// console.log('changepack._decodePathAndAssign(obj3, "0", 1)');
-// obj3 = changepack._decodePathAndAssign(obj3, "0", 1);
-// obj3 = changepack._decodePathAndAssign(obj3, "1", 2);
-// console.log(obj3);
-
-/*
-var obj={
-	foo1: {
-		foo2: [
-			{foo4: 10},
-			{foo5: 20},
-		]
-	}
-}
-var changes = changepack.encode(a, obj, "29d98a587bee020", "jerkrichardsasdf");
-
-console.log(changes);
-
-*/
-
-// var obj4 = {};
-// console.log('changepack._decodePathAndAssign(obj4, "foo1.foo2.0", 1)');
-// obj4 = changepack._decodePathAndAssign(obj4, "foo1.foo2.0.foo4.0", 10);
-// obj4 = changepack._decodePathAndAssign(obj4, "foo1.foo2.0.foo4.1", 15);
-// obj4 = changepack._decodePathAndAssign(obj4, "foo1.foo2.1.foo5", 20);
-// console.log(obj4);
-// 
-// obj4 = changepack._decodePathAndRemove(obj4, "foo1.foo2.1");
-// console.log(obj4);
-
-
-/*
-var obj = {
-	foo1: [
-		{foo2: false}
-	]
-}
-
-next = obj;
-console.log("next");
-console.log(next);
-
-next = next["foo1"];
-console.log("next");
-console.log(next);
-
-next = next[0];
-console.log("next");
-console.log(next);
-
-next["foo2"] = true
-console.log("next");
-console.log(next);
-*/
-
-// obj.foo1.foo2.push("asdf");
-
-
-/*
-// we don't want to overwrite anything, so we have this check here
-// (tpath[t] in next) == false && 
-// if ( (next instanceof Array) == false) {
-if ( (tpath[t] in next) == false && isNaN(tpath[t]) == true ) {
-	// var endPoint = t < tpath.length-1 ? isNaN(tpath[t+1]) == false ? [] : {} : value;
-	
-	// can we add something
-	if (t < tpath.length-1) {
-		if ( (tpath[t] in next) == false ) {
-			if (isNaN(tpath[t+1]) == false) {
-				endPoint = [];
-			} else {
-				endPoint = {};
-			}
-		} else {
-			// key already exists, nothing to write here, just continue
-			next = next[ tpath[t] ];
-			continue;
-		}
-	} else {
-		endPoint = value;
-	}
-	
-	next[ tpath[t] ] = endPoint;
-	
-} else if (isNaN(tpath[t]) == false) {
-	// is this an array entry?
-	// if so, add the array element with an empty object, array, or a value
-	
-} else {
-	// the key already exists, so check if it's an array and add the key/value.  otherwise, just leave it alone
-	// if () {
-	// 
-	// }
-	next[ tpath[t] ] = value;
-}
-
-next = next[ tpath[t] ];
-*/
-
-
-// var a = {a:"", b:"1", c:["asdf"]};
-// var b = {a:"1", b:"1", c:["asdf"]};
-// 
-// console.log(changepack.quickCheck(a,b));
