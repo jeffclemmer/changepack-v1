@@ -1,7 +1,7 @@
 Quick Warning
 -------------
 
-This software is *BETA* software.  It still needs more tests written, performance tuning, and some security testing.
+This software is **BETA** software.  It still needs more tests written, performance tuning, and some security testing.
 
 What Does ChangePack Do?
 -------------------------
