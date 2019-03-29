@@ -3,7 +3,7 @@ Quick Warning
 
 This software is *BETA* software.  It still needs more tests written, performance tuning, and some security testing.
 
-What Does The Changepack.js Do?
+What Does ChangePack Do?
 -------------------------
 
 In a nutshell, it basically gives you a diff of two JSON objects and then packs that diff into a packed binary format. It allows you to track changes over time to an object or calculate differences between two objects.
