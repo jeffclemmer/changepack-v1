@@ -29,7 +29,7 @@ var evolved = changepack.decode(previous, unpackedChanges);
 
 var changepack = {};
 
-changepack.types = {
+let types = {
 	0: "bool false",               // 0x00
 	1: "bool true",                // 0x01
 	2: "8 bit int",                // 0x02
@@ -63,7 +63,7 @@ the new object is compared with the old.  only changes in the new object
 from the old object will be represented
 */
 changepack.encode = function(oldObj, newObj) {
-	
+  
 	var startTime = new Date().getTime();
 	
 	// do some sanity checks
@@ -77,9 +77,9 @@ changepack.encode = function(oldObj, newObj) {
 		return "";
 	}
 	
-	// create a list of paths in the old object
-	var oldPaths = changepack._paths(oldObj);
-	var newPaths = changepack._paths(newObj);
+	// create a list of paths in the old and new objects
+	var oldPaths = _paths(oldObj);
+	var newPaths = _paths(newObj);
 	
 	// check for added paths and changed values
 	var add = [];
@@ -101,28 +101,48 @@ changepack.encode = function(oldObj, newObj) {
 		}
 		
 		if (changed == true) {
-			var actionType = changepack._getActionType(newPaths[path]);
+			var actionType = _getActionType(newPaths[path]);
 
 			change += String.fromCharCode(actionType);
-			change += changepack._packString(path);
-			change += changepack._encodeValue(actionType, newPaths[path]);
+			change += _packString(path);
+			change += _encodeValue(actionType, newPaths[path]);
 			
-			add.push({change: change, len: change.length, actionType: actionType, actionTypeTitle: changepack.types[actionType]});
+			add.push({path: path, change: change, len: change.length, actionType: actionType, actionTypeTitle: types[actionType]});
 		}
 	}
-	
 	
 	// check for removed paths
-	var remove = [];
+	var removeObj = {};
+	var deepRemoval = {};
 	for (var path in oldPaths) {
-		var change = "";
-		if ( (path in newPaths) == false) {
-			change += String.fromCharCode(0xF0);
-			change += changepack._packString(path);
+		
+		var check = path.split(".");
+		var cur = newObj;
+		var path = "";
+		
+		for (var j = 0; j < check.length; j++) {
+			path += path == "" ? check[j] : "." + check[j];
 			
-			remove.push({change: change, len: change.length, actionType: 0xF0, actionTypeTitle: changepack.types[0xF0]});
+			if ( (check[j] in cur) == false) {
+				// add to an object so we don't have duplicates.
+				removeObj[path] = 0;
+				break;
+			} else {
+				cur = cur[ check[j] ];
+			}
 		}
+		
 	}
+	
+	// go through the remove object and add anything to be removed
+	var remove = [];
+	for (var path in removeObj) {
+		let change = String.fromCharCode(0xF0);
+		change += _packString(path);
+		
+		remove.push({path: path, change: change, len: change.length, actionType: 0xF0, actionTypeTitle: types[0xF0]});
+	}
+
 	
 	// console.log("changepack encoding time: " + ( (new Date().getTime() - startTime) ) + " ms" );
 	
@@ -201,8 +221,8 @@ changepack.packChanges = function(changes) {
 
 // take a buffer change pack from packChanges and decodes it into individual change packs
 changepack.unpackChanges = function(packedChanges) {
-	
-	var startTime = new Date().getTime();
+
+  var startTime = new Date().getTime();
 	
 	var changes = [];
 	
@@ -229,7 +249,7 @@ changepack.unpackChanges = function(packedChanges) {
 			
 			// decode change
 			if (actionType >= 0x0C && actionType <= 0x0F) {
-				bufLen = 1 << (actionType - 0x0C);
+				let bufLen = 1 << (actionType - 0x0C);
 				for (var t = 0; t < bufLen; t++) {
 					copy[t] = packedChanges.charCodeAt(curPos + t);
 				}
@@ -265,8 +285,8 @@ changepack.unpackChanges = function(packedChanges) {
 // takes a change set and applies it to an existing object / array
 // returns an object representing the changes made to oldObj
 changepack.decode = function(oldObj, changes) {
-	
-	var startTime = new Date().getTime();
+
+  var startTime = new Date().getTime();
 	
 	var buffer = new ArrayBuffer(8);
 	var copy = new Uint8Array(buffer);
@@ -332,7 +352,7 @@ changepack.decode = function(oldObj, changes) {
 			switch (actionType) {
 				case 0x02: // int8
 					value = view.getInt8(0);
-					break;id.length
+					break;
 				case 0x03: // int16
 					value = view.getInt16(0);
 					break;
@@ -372,14 +392,13 @@ changepack.decode = function(oldObj, changes) {
 			}
 		}
 		
-		
 		// replay changes on oldObj
 		if (actionType == 0xF0) {
 			// do field removals
-			oldObj = changepack._decodePathAndRemove(oldObj, path);
+			oldObj = _decodePathAndRemove(oldObj, path);
 		} else {
 			// do field additions and changes
-			oldObj = changepack._decodePathAndAssign(oldObj, path, value);
+			oldObj = _decodePathAndAssign(oldObj, path, value);
 		}
 		
 	}
@@ -393,17 +412,21 @@ changepack.decode = function(oldObj, changes) {
 // do a quick check to see if anything has changed
 // useful to find out if something has changed, without going through the encoding process
 changepack.quickCheck = function(oldObj, newObj) {
-	
-	var startTime = new Date().getTime();
-	
+
+  var startTime = new Date().getTime();
+
 	// create a list of paths in the old object
-	oldPaths = changepack._paths(oldObj);
-	newPaths = changepack._paths(newObj);
+	var oldPaths = _paths(oldObj);
+	var newPaths = _paths(newObj);
 	
 	// check for any additions or changes
 	for (var path in newPaths) {
 		if ( (path in oldPaths) == true) {
-			if (newPaths[path] != oldPaths[path]) {
+			if (
+				newPaths[path] != oldPaths[path] && 
+				(Object.keys(oldPaths[path]).length == 0 && Object.keys(newPaths[path]).length == 0) == false &&
+				(newo.length == 0 && oldo.length == 0) == false
+			) {
 				return true;
 			}
 		} else {
@@ -428,7 +451,7 @@ changepack.quickCheck = function(oldObj, newObj) {
 
 
 // decode the chain of a flat path and remove that key
-changepack._decodePathAndRemove = function(obj, path) {
+function _decodePathAndRemove(obj, path) {
 	var tpath = path.split(".");
 	
 	// sanity
@@ -462,7 +485,7 @@ changepack._decodePathAndRemove = function(obj, path) {
 }
 
 // decode the chain of a flat path and assign the value to that path
-changepack._decodePathAndAssign = function(obj, path, value) {
+function _decodePathAndAssign(obj, path, value) {
 
 	// sanity
 	if (obj == undefined) throw "object is not defined";
@@ -471,11 +494,20 @@ changepack._decodePathAndAssign = function(obj, path, value) {
 	
 	// sanity
 	if (tpath.length == 0) return obj;
-	
+
 	// if the top level is an array, make the object an array
 	// otherwise, leave it alone
 	// if something already exists, leave it alone
-	obj = isNaN(tpath[0]) == false ? (obj instanceof Array) == false ? [] : obj : obj;
+	// obj = isNaN(tpath[0]) == false ? (obj instanceof Array) == false ? [] : obj : obj;
+	
+	
+	
+	// if (isNaN(tpath[0]) == false) {
+	// 	if ( (obj instanceof Array) == false ) {
+	// 		obj = [];
+	// 	}
+	// }
+	
 	
 	// object to build upon
 	var cur = obj;
@@ -492,9 +524,11 @@ changepack._decodePathAndAssign = function(obj, path, value) {
 			if ( t+1 < tpath.length && isNaN(tpath[t+1]) == false) {
 				// looks like an array
 				cur[ tpath[t] ] = [];
+				
 			} else if (t+1 < tpath.length && isNaN(tpath[t+1]) == true) {
 				// looks like an object
 				cur[ tpath[t] ] = {};
+				
 			} else {
 				// write value into cur
 				cur[ tpath[t] ] = value;
@@ -515,7 +549,7 @@ changepack._decodePathAndAssign = function(obj, path, value) {
 
 
 // packs the value into a string
-changepack._encodeValue = function(actionType, value) {
+function _encodeValue(actionType, value) {
 	if (actionType == 0x00) {
 		
 		// is bool false?
@@ -643,7 +677,7 @@ changepack._encodeValue = function(actionType, value) {
 
 
 // packs a string into binary format
-changepack._packString = function(value) {
+function _packString(value) {
 	
 	if (value.length <= 0xFF) {
 		// is 8 bit string?
@@ -663,7 +697,7 @@ changepack._packString = function(value) {
 
 
 // checks the type and creates the actionType byte
-changepack._getActionType = function(value) {
+function _getActionType(value) {
 	
 	// is number?
 	if (typeof value == "number") {
@@ -741,7 +775,11 @@ changepack._getActionType = function(value) {
 
 // this outputs an array of {path: "", value: ""} objects
 // with inspiration from: https://stackoverflow.com/a/40053014
-changepack._paths = function(obj) {
+// this implements something similar to a directory descending algorithm.
+// if it finds objects with sub elements, it pushes those onto a stack 
+// and pulls them out later, as if they were sub directories, so to speak.  
+// otherwise, this finalizes the element with a path
+function _paths(obj) {
 	
 	var paths = {};
 	var objects = [ {path: "", obj: obj} ];
@@ -749,6 +787,8 @@ changepack._paths = function(obj) {
 	while (objects.length > 0) {
 		
 		var obj = objects.shift();
+		
+		if (obj == null) continue;
 		
 		var keys = Object.keys( obj.obj );
 		
@@ -760,12 +800,14 @@ changepack._paths = function(obj) {
 		
 		for (var key in keys) {
 			if ( obj.obj[ keys[key] ] instanceof Object || obj.obj[ keys[key] ] instanceof Array ) {
+				// if we have an object, that means that we have sub elements underneath.  push these on the stack and get them later
 				objects.push({
 					path: obj.path == "" ? keys[key] : obj.path + "." + keys[key], 
 					obj: obj.obj[ keys[key] ],
 				});
 			} else {
 				if ( Object.prototype.toString.call( obj.obj[ keys[key] ] ) != "[object Array]" ) {
+					// this element is an actual value of something.  finalize it and put it in paths for returning to the caller
 					paths[ obj.path == "" ? keys[key] : obj.path + "." + keys[key] ] = obj.obj[ keys[key] ];
 				}
 			}

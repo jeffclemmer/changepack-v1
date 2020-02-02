@@ -1,5 +1,5 @@
-<!-- Written by and Copyright 2019 by Jeff Clemmer -->
-
+<!-- Written by and Copyright 2019-2020 by Jeff Clemmer -->
+<!-- you should be able to just load this as a file:///the/changepack.js/test.html/path -->
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
@@ -24,10 +24,12 @@
 </div>
 
 <script src="changepack.js"></script>
+
 <script>
 
 // let fullDebug = true;
 let fullDebug = false;
+let skipLongTests = true;
 
 function log(text) {
 	if (fullDebug == true) {
@@ -35,6 +37,26 @@ function log(text) {
 	}
 }
 
+
+// from https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
+function makeid(length) {
+   var result           = '';
+   var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+   var charactersLength = characters.length;
+   for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+   }
+   return result;
+}
+
+
+// from https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
 /*
 testing function
 
@@ -72,7 +94,6 @@ function test(o,n,n1,checking) {
 		console.log(n1);
 	}
 }
-
 
 
 function startTest() {
@@ -190,106 +211,200 @@ function doTest() {
 	
 	
 	// various int numbers
-	let lenFailed = [];
-	o = {};
-	for (var number = -2147483649; number < 4294967295; number += 1000) {
-		n = {a: number, };
-		n1 = {a: number, };
-		log("original");
-		log(o);
-		let changes = changepack.encode(o, n);
-		log("changes");
-		log(changes);
-		let packedChanges = changepack.packChanges(changes);
-		log("packedChanges");
-		log(packedChanges);
-		let unpackedChanges = changepack.unpackChanges(packedChanges.packedChanges);
-		log("unpackedChanges");
-		log(unpackedChanges);
-		let evolved = changepack.decode(o, unpackedChanges);
-		log("evolved");
-		log(evolved);
-	
-		if (evolved.a != n1.a) {
-			lenFailed.push(len);
-		}
-	}
-	
-	if (lenFailed.length == 0) {
-		console.log("checking various int numbers...passed");
-	} else {
-		console.error("checking various int numbers: " + lenFailed.join(",") + "...FAILED");
-	}
-	
-	log("--------");
-	
-	
-	// various float numbers
-	lenFailed = [];
-	o = {};
-	for (var number = -650000.5; number < 650000.5; number += 5) {
-		n = {a: number, };
-		n1 = {a: number, };
-		log("original");
-		log(o);
-		let changes = changepack.encode(o, n);
-		log("changes");
-		log(changes);
-		let packedChanges = changepack.packChanges(changes);
-		log("packedChanges");
-		log(packedChanges);
-		let unpackedChanges = changepack.unpackChanges(packedChanges.packedChanges);
-		log("unpackedChanges");
-		log(unpackedChanges);
-		let evolved = changepack.decode(o, unpackedChanges);
-		log("evolved");
-		log(evolved);
-		
-		if (evolved.a != n1.a) {
-			lenFailed.push(len);
-		}
-	}
-	
-	if (lenFailed.length == 0) {
-		console.log("checking various float numbers...passed");
-	} else {
-		console.error("checking various float numbers: " + lenFailed.join(",") + "...FAILED");
-	}
-	
-	log("--------");
-	
-	
-	// various length strings
-	lenFailed = [];
-	o = {};
-	for (var len = 0; len < 100000; len++) {
-		n = {a: "".padStart(len, "0"), };
-		n1 = {a: "".padStart(len, "0"), };
-		log("original");
-		log(o);
-		let changes = changepack.encode(o, n);
-		log("changes");
-		log(changes);
-		let packedChanges = changepack.packChanges(changes);
-		log("packedChanges");
-		log(packedChanges);
-		let unpackedChanges = changepack.unpackChanges(packedChanges.packedChanges);
-		log("unpackedChanges");
-		log(unpackedChanges);
-		let evolved = changepack.decode(o, unpackedChanges);
-		log("evolved");
-		log(evolved);
-		
-		if (evolved.a != n1.a) {
-			lenFailed.push(len);
-		}
-	}
+	if (skipLongTests == false) {
 
-	if (lenFailed.length == 0) {
-		console.log("checking various length strings length...passed");
-	} else {
-		console.error("checking various length strings length: " + lenFailed.join(",") + "...FAILED");
+		let lenFailed = [];
+		o = {};
+		for (var number = -2147483649; number < 4294967295; number += 1000) {
+			n = {a: number, };
+			n1 = {a: number, };
+			log("original");
+			log(o);
+			let changes = changepack.encode(o, n);
+			log("changes");
+			log(changes);
+			let packedChanges = changepack.packChanges(changes);
+			log("packedChanges");
+			log(packedChanges);
+			let unpackedChanges = changepack.unpackChanges(packedChanges.packedChanges);
+			log("unpackedChanges");
+			log(unpackedChanges);
+			let evolved = changepack.decode(o, unpackedChanges);
+			log("evolved");
+			log(evolved);
+		
+			if (evolved.a != n1.a) {
+				lenFailed.push(len);
+			}
+		}
+		
+		if (lenFailed.length == 0) {
+			console.log("checking various int numbers...passed");
+		} else {
+			console.error("checking various int numbers: " + lenFailed.join(",") + "...FAILED");
+		}
+		
+		log("--------");
+		
+		
+		// various float numbers
+		lenFailed = [];
+		o = {};
+		for (var number = -650000.5; number < 650000.5; number += 5) {
+			n = {a: number, };
+			n1 = {a: number, };
+			log("original");
+			log(o);
+			let changes = changepack.encode(o, n);
+			log("changes");
+			log(changes);
+			let packedChanges = changepack.packChanges(changes);
+			log("packedChanges");
+			log(packedChanges);
+			let unpackedChanges = changepack.unpackChanges(packedChanges.packedChanges);
+			log("unpackedChanges");
+			log(unpackedChanges);
+			let evolved = changepack.decode(o, unpackedChanges);
+			log("evolved");
+			log(evolved);
+			
+			if (evolved.a != n1.a) {
+				lenFailed.push(len);
+			}
+		}
+		
+		if (lenFailed.length == 0) {
+			console.log("checking various float numbers...passed");
+		} else {
+			console.error("checking various float numbers: " + lenFailed.join(",") + "...FAILED");
+		}
+		
+		log("--------");
+		
+		// various length strings
+		lenFailed = [];
+		o = {};
+		for (var len = 0; len < 100000; len++) {
+			n = {a: "".padStart(len, "0"), };
+			n1 = {a: "".padStart(len, "0"), };
+			log("original");
+			log(o);
+			let changes = changepack.encode(o, n);
+			log("changes");
+			log(changes);
+			let packedChanges = changepack.packChanges(changes);
+			log("packedChanges");
+			log(packedChanges);
+			let unpackedChanges = changepack.unpackChanges(packedChanges.packedChanges);
+			log("unpackedChanges");
+			log(unpackedChanges);
+			let evolved = changepack.decode(o, unpackedChanges);
+			log("evolved");
+			log(evolved);
+			
+			if (evolved.a != n1.a) {
+				lenFailed.push(len);
+			}
+		}
+
+		if (lenFailed.length == 0) {
+			console.log("checking various length strings length...passed");
+		} else {
+			console.error("checking various length strings length: " + lenFailed.join(",") + "...FAILED");
+		}
+		
+		log("--------");
+		
 	}
+		
+	
+	// checking random object add and delete
+	let changes = [];
+	let robj = {};
+	let rootobj = robj;
+	
+	for (let i = 0; i < 5; i++) {
+		
+		let limit = Math.round( Math.random() * 5 ) + 1;
+		let lastname = "";
+		
+		for (let j = 0; j < limit; j++) {
+			let name = makeid(5);
+			robj[name] = {};
+			lastname = name;
+		}
+		
+		// move robj to the next branch level
+		robj = robj[lastname];
+	}
+	
+	let ogRootObj = JSON.parse( JSON.stringify(rootobj) );
+	console.log("ogRootObj:", ogRootObj);
+	
+	// encode rootobj
+	let initChange = changepack.encode({}, rootobj);
+	
+	// delete random nodes from the tree, encode and then compare after decoding.
+	
+	// shuffleArray(initChange);
+	
+	let lastRootObj = JSON.parse( JSON.stringify(ogRootObj) );
+	while (initChange.length > 0) {
+		let path = initChange.shift().path;
+		
+		console.log("path:", path);
+		
+		// split path
+		let splitPath = path.split(".");
+		
+		console.log("splitPath:", splitPath);
+		
+		// work up through the path and delete the furthest branch
+		robj = rootobj;
+		for (let i = 0; i < splitPath.length - 1; i++) {
+			robj = robj[ splitPath[i] ];
+		}
+		
+		console.log("robj[]:", splitPath[splitPath.length-1]);
+		delete robj[ splitPath[splitPath.length-1] ];
+		
+		let theChange = changepack.encode(lastRootObj, rootobj);
+		console.log("theChange:", theChange);
+		changes.push( theChange );
+
+		console.log("lastRootObj:", JSON.parse( JSON.stringify(lastRootObj ) ) );
+		
+		rootobj = JSON.parse( JSON.stringify(rootobj) );
+		lastRootObj = JSON.parse( JSON.stringify(rootobj) );
+		
+		console.log("rootobj:", rootobj);
+		console.log("lastRootObj:", lastRootObj);
+	}
+	
+	console.log("rootobj:", rootobj);
+	console.log("changes:", changes);
+
+	console.log("ogRootObj");
+	console.log(JSON.parse( JSON.stringify(ogRootObj) ));
+	
+	// evolve changes from ogRootObj
+	let evolved = null;
+	for (let i in changes) {
+		evolved = changepack.decode(ogRootObj, changes[i]);
+	}
+	
+	console.log("ogRootObj");
+	console.log(ogRootObj);
+	
+	
+	// if ogRootObj = rootobj
+	
+	if (changepack.quickCheck(ogRootObj, rootobj) == true) {
+		console.log("checking deep delete...FAILED");
+	} else {
+		console.log("checking deep delete...PASSED");
+	}
+	
 	
 	log("--------");
 	
@@ -323,6 +438,8 @@ if (!String.prototype.padStart) {
 		return out;
 	}
 }
+
+startTest();
 
 </script>
 </body>
