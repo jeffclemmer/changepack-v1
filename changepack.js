@@ -424,8 +424,7 @@ changepack.quickCheck = function(oldObj, newObj) {
 		if ( (path in oldPaths) == true) {
 			if (
 				newPaths[path] != oldPaths[path] && 
-				(Object.keys(oldPaths[path]).length == 0 && Object.keys(newPaths[path]).length == 0) == false &&
-				(newo.length == 0 && oldo.length == 0) == false
+				(Object.keys(oldPaths[path]).length == 0 && Object.keys(newPaths[path]).length == 0) == false
 			) {
 				return true;
 			}
