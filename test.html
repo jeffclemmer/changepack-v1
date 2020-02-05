@@ -412,6 +412,117 @@ function doTest() {
 	
 	document.getElementById("running").innerHTML = "Done...please view the console.log() for test results";
 	
+	// test specific situation with array deletes
+	changes = [];
+	
+	o = {};
+	n = {
+		c: 0,
+		a: [{a: "asdf", b: "ffdsa"}],
+		b: [{a: "qwer", b: "terew"}],
+		c: [{a: "vcsa", b: "kjwle"}],
+		d: [{a: "olpj", b: "fvokd"}],
+	};
+	
+	let theChange = changepack.encode(o, n);
+	console.log("theChange:", theChange);
+	changes.push( theChange );
+	
+	o = n;
+	n = {
+		c: 1,
+		a: [{a: "asdf", b: "ffdsa"}],
+		b: [{a: "qwer", b: "terew"}],
+		c: [{a: "vcsa", b: "kjwle"}, {a: "ijfle", b: "opfewa"}],
+		d: [{a: "olpj", b: "fvokd"}],
+	};
+	
+	theChange = changepack.encode(o, n);
+	console.log("theChange:", theChange);
+	changes.push( theChange );
+
+	o = n;
+	n = {
+		c: 2,
+		a: [{a: "asdf", b: "ffdsa"}],
+		b: [{a: "qwer", b: "terew"}],
+		c: [{a: "ijfle", b: "opfewa"}],
+		d: [{a: "olpj", b: "fvokd"}],
+	};
+	
+	theChange = changepack.encode(o, n);
+	console.log("theChange:", theChange);
+	changes.push( theChange );
+	
+	o = n;
+	n = {
+		c: 3,
+		a: [{a: "asdf", b: "ffdsa"}],
+		b: [{a: "qwer", b: "terew"}],
+		c: [],
+		d: [{a: "olpj", b: "fvokd"}],
+	};
+	
+	theChange = changepack.encode(o, n);
+	console.log("theChange:", theChange);
+	changes.push( theChange );
+	
+	o = n;
+	n = {
+		c: 4,
+		a: [{a: "asdf", b: "ffdsa"}],
+		b: [{a: "qwer", b: "terew"}],
+		d: [{a: "olpj", b: "fvokd"}],
+	};
+	
+	theChange = changepack.encode(o, n);
+	console.log("theChange:", theChange);
+	changes.push( theChange );
+	
+	o = n;
+	n = {
+		c: 5,
+		a: [{b: "ffdsa"}],
+		b: [{a: "qwer", b: "terew"}],
+		d: [{a: "olpj", b: "fvokd"}],
+	};
+	
+	theChange = changepack.encode(o, n);
+	console.log("theChange:", theChange);
+	changes.push( theChange );
+	
+	o = n;
+	n = {
+		c: 6,
+		as: {logn: "ewrpoi"},
+		a: [{b: "ffdsa"}],
+		b: [{a: "qwer", b: "terew"}],
+		d: [{a: "olpj", b: "fvokd"}],
+	};
+	
+	theChange = changepack.encode(o, n);
+	console.log("theChange:", theChange);
+	changes.push( theChange );
+	
+	o = n;
+	n = {
+		c: 7,
+		d: [{a: "olpj", b: "fvokd"}],
+	};
+	
+	theChange = changepack.encode(o, n);
+	console.log("theChange:", theChange);
+	changes.push( theChange );
+	
+	o = {};
+	
+	for (let i in changes) {
+		o = changepack.decode(o, changes[i]);
+	}
+	
+	console.log("final decode");
+	console.log(o);
+	
 }
 
 

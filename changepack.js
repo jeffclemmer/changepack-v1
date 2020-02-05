@@ -1,4 +1,4 @@
-// Written by and Copyright 2019 by Jeff Clemmer
+// Written by and Copyright 2019-2020 by Jeff Clemmer
 
 /* 
 right now, this code *does not* work in node.  node handles strings differently and strings can't be packed correctly.
@@ -470,7 +470,17 @@ function _decodePathAndRemove(obj, path) {
 	
 	// delete the key
 	if (cur != undefined) {
-		delete cur[ tpath[ tpath.length-1 ] ];
+		// if the container above the current object is an array and tpath[tpath.length-1] can parse as an int, then we have an array member that we need to splice, as opposed to using delete.
+		
+		let arrayIndex = parseInt(tpath[ tpath.length-1 ]);
+		
+		if ( tpath.length > 1 && arrayIndex != NaN && Array.isArray(cur) == true ) {
+			console.log("is array type");
+			cur.splice(arrayIndex, 1);
+		} else {
+			console.log("is object type");
+			delete cur[ tpath[ tpath.length-1 ] ];
+		}
 		
 		// check for empty object and go up one level and delete the higher up as well
 		if (Object.keys( cur ).length === 0) {
