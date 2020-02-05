@@ -339,7 +339,7 @@ function doTest() {
 	}
 	
 	let ogRootObj = JSON.parse( JSON.stringify(rootobj) );
-	console.log("ogRootObj:", ogRootObj);
+	// console.log("ogRootObj:", ogRootObj);
 	
 	// encode rootobj
 	let initChange = changepack.encode({}, rootobj);
@@ -352,12 +352,12 @@ function doTest() {
 	while (initChange.length > 0) {
 		let path = initChange.shift().path;
 		
-		console.log("path:", path);
+		// console.log("path:", path);
 		
 		// split path
 		let splitPath = path.split(".");
 		
-		console.log("splitPath:", splitPath);
+		// console.log("splitPath:", splitPath);
 		
 		// work up through the path and delete the furthest branch
 		robj = rootobj;
@@ -365,27 +365,27 @@ function doTest() {
 			robj = robj[ splitPath[i] ];
 		}
 		
-		console.log("robj[]:", splitPath[splitPath.length-1]);
+		// console.log("robj[]:", splitPath[splitPath.length-1]);
 		delete robj[ splitPath[splitPath.length-1] ];
 		
 		let theChange = changepack.encode(lastRootObj, rootobj);
-		console.log("theChange:", theChange);
+		// console.log("theChange:", theChange);
 		changes.push( theChange );
 
-		console.log("lastRootObj:", JSON.parse( JSON.stringify(lastRootObj ) ) );
+		// console.log("lastRootObj:", JSON.parse( JSON.stringify(lastRootObj ) ) );
 		
 		rootobj = JSON.parse( JSON.stringify(rootobj) );
 		lastRootObj = JSON.parse( JSON.stringify(rootobj) );
 		
-		console.log("rootobj:", rootobj);
-		console.log("lastRootObj:", lastRootObj);
+		// console.log("rootobj:", rootobj);
+		// console.log("lastRootObj:", lastRootObj);
 	}
 	
-	console.log("rootobj:", rootobj);
-	console.log("changes:", changes);
+	// console.log("rootobj:", rootobj);
+	// console.log("changes:", changes);
 
-	console.log("ogRootObj");
-	console.log(JSON.parse( JSON.stringify(ogRootObj) ));
+	// console.log("ogRootObj");
+	// console.log(JSON.parse( JSON.stringify(ogRootObj) ));
 	
 	// evolve changes from ogRootObj
 	let evolved = null;
@@ -393,8 +393,8 @@ function doTest() {
 		evolved = changepack.decode(ogRootObj, changes[i]);
 	}
 	
-	console.log("ogRootObj");
-	console.log(ogRootObj);
+	// console.log("ogRootObj");
+	// console.log(ogRootObj);
 	
 	
 	// if ogRootObj = rootobj
@@ -407,10 +407,6 @@ function doTest() {
 	
 	
 	log("--------");
-	
-	console.log("done");
-	
-	document.getElementById("running").innerHTML = "Done...please view the console.log() for test results";
 	
 	// test specific situation with array deletes
 	changes = [];
@@ -522,6 +518,19 @@ function doTest() {
 	
 	console.log("final decode");
 	console.log(o);
+
+	if (changepack.quickCheck(o, n) == true) {
+		console.log("checking specific evolution...FAILED");
+	} else {
+		console.log("checking deep delete...PASSED");
+	}
+	
+	log("--------");
+	
+	console.log("done");
+	
+	document.getElementById("running").innerHTML = "Done...please view the console.log() for test results";
+
 	
 }
 

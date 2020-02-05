@@ -475,10 +475,8 @@ function _decodePathAndRemove(obj, path) {
 		let arrayIndex = parseInt(tpath[ tpath.length-1 ]);
 		
 		if ( tpath.length > 1 && arrayIndex != NaN && Array.isArray(cur) == true ) {
-			console.log("is array type");
 			cur.splice(arrayIndex, 1);
 		} else {
-			console.log("is object type");
 			delete cur[ tpath[ tpath.length-1 ] ];
 		}
 		
@@ -495,7 +493,7 @@ function _decodePathAndRemove(obj, path) {
 
 // decode the chain of a flat path and assign the value to that path
 function _decodePathAndAssign(obj, path, value) {
-
+	
 	// sanity
 	if (obj == undefined) throw "object is not defined";
 	
